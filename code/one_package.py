@@ -47,9 +47,7 @@ if package_data:
     else:
         total = calc_total_units(package)
         unit = get_unit(package)
-
         for level in package:
             for name, quantity in level.items():
                 st.info(f"{name} ➡️ {quantity}")
-
-        st.success(f"Total 📦 Size: {total} {unit}")
+        st.success(f"Total 📦 Size: {total} {unit}") 

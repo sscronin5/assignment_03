@@ -1,4 +1,81 @@
-Write your reflection here.
+Overall
+I started this assignment with a solid understanding of how a Streamlit page is
+built: the script runs top to bottom, and each widget appears in the order I
+call it. Calling parse_packaging, calc_total_units, and get_unit from the
+packaging_parser module (instead of writing my own parser) let me focus on the
+Streamlit side, and reading the parser's docstrings was enough to know what
+each function takes and returns.
+
+What went well
+- Guards. In all three apps I used the same pattern: a widget's return value
+  is empty on the first run (an empty string from st.text_input, None from
+  st.file_uploader), so I wrapped the work in a guard like
+  "if package_data:" or "if uploaded_file is not None:" so the first run
+  doesn't crash.
+- Bytes vs. text. I learned that st.file_uploader gives the app bytes, not
+  text, so I had to decode it with .getvalue().decode("utf-8") before I could
+  split it into lines, strip each line, and skip blank ones.
+- Session state. For process_files.py I understood why an ordinary variable
+  like files_processed = 0 resets on every rerun, and I used st.session_state
+  with the "initialise once" pattern (if "files_processed" not in
+  st.session_state: ...) so the counts survive reruns.
+
+Struggles
+1. The last two process_files tests in test_streamlit.py
+   (accumulates_across_uploads and does_not_double_count_on_rerun) were the
+   hardest part of the lab and took me a long time and a lot of help from AI
+   to solve. There were two separate bugs:
+
+   a) My st.metric cards were drawn at the top of the script, before the
+      button-triggered update. Because Streamlit reruns top to bottom, the
+      metrics always showed the count from before the click. I fixed this by
+      creating st.columns(2) at the top but calling .metric() at the bottom,
+      after session state was updated (initialise once -> update on click ->
+      display from state).
+
+   b) Short-circuit evaluation hid my button. My original line was:
+          if uploaded_file is not None and st.button("Process file", key="process"):
+      Python's "and" stops as soon as the left side is False, so on the first
+      run (no file yet) st.button was never called and the Process button
+      didn't exist on the page. The test uploads a file and clicks without
+      rerunning first, so its helper couldn't find key="process" and fell
+      back to the only button on the page — my Reset button. Swapping the
+      order fixed it:
+          if st.button("Process file", key="process") and uploaded_file is not None:
+      Now the button is created on every run, and the work only happens on
+      the rerun the click caused, and only if a file is chosen.
+
+   The lesson: when a test fails, read the test helpers (tests/helpers.py),
+   not just the assertion. The "('0', '0')" result only made sense once I saw
+   how upload() and widget() actually worked.
+
+2. Code style feedback. GraderThan's AI grader gave me 1.0/2.0 for style
+   because my apps had no error handling and still contained scaffolding
+   comments from the template. I wrapped each parse_packaging call in
+   try / except ValueError and used st.error(...) so bad input like "hello"
+   shows a friendly message instead of a traceback, using "else:" so only the
+   line that can fail sits inside the try. I also deleted the template
+   comments and rewrote the docstrings to describe what each app does.
+   Pylint warnings taught me some smaller conventions too: files need a final
+   newline, top-level variables get flagged as "constants" (invalid-name),
+   and demo code under if __name__ == "__main__": belongs in a main()
+   function to avoid redefined-outer-name warnings.
+
+Areas I need more practice (and what I'll do)
+- The rerun model and element order. I need to get better at predicting what
+  the page shows after an interaction. Next step: add st.write of the session
+  state at different points in a small app and click through it to watch
+  when values change.
+- Short-circuit evaluation with "and"/"or". I didn't realise the order of
+  conditions controls whether a function is called at all. Next step: write
+  a few practice conditions with print() inside functions to see which ones
+  run.
+- Debugging from tests. Next step: run failing tests with -vv and read the
+  helper functions before changing my code, instead of guessing.
+- Writing error handling from the start, not after feedback. Next step: any
+  time I call a function whose docstring says it raises an exception, write
+  the try / except right away.
+
 
 See reflection.md for what makes a good reflection — be specific, use the
 terminology from this assignment (rerun, widget, return value, guard, bytes vs.
