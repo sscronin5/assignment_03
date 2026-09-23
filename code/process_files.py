@@ -20,6 +20,60 @@ Run it:  Run and Debug -> "Streamlit Run: Current File"   (see README Reference 
 Test it: pytest tests/test_streamlit.py -k process_files
 """
 
+import json
+import os
+import streamlit as st
+from packaging_parser import parse_packaging
+
+st.title("Process Package Files")
+
+# 1. Initialise once
+if "files_processed" not in st.session_state:
+    st.session_state.files_processed = 0
+if "packages_processed" not in st.session_state:
+    st.session_state.packages_processed = 0
+if "summary_lines" not in st.session_state:
+    st.session_state.summary_lines = []
+
+# Create the metric slots at the top; they are filled at the end
+col1, col2 = st.columns(2)
+
+# Optional reset
+if st.button("Reset counts", key="reset"):
+    st.session_state.files_processed = 0
+    st.session_state.packages_processed = 0
+    st.session_state.summary_lines = []
+
+uploaded_file = st.file_uploader("Upload package file:", key="package_file")
+
+# 2. Update on the click only
+if st.button("Process file", key="process") and uploaded_file is not None:
+    text = uploaded_file.getvalue().decode("utf-8")
+    parsed_packages = []
+    for line in text.splitlines():
+        line = line.strip()
+        if line:
+            parsed_packages.append(parse_packaging(line))
+
+    os.makedirs("data", exist_ok=True)
+    json_filename = os.path.join("data", uploaded_file.name.replace(".txt", ".json"))
+    with open(json_filename, "w", encoding="utf-8") as f:
+        json.dump(parsed_packages, f, indent=4)
+
+    st.session_state.files_processed += 1
+    st.session_state.packages_processed += len(parsed_packages)
+    st.session_state.summary_lines.append(
+        f"{len(parsed_packages)} packages written to {json_filename}"
+    )
+
+# 3. Display from state, after it has been updated
+col1.metric("Files processed", st.session_state.files_processed)
+col2.metric("Packages processed", st.session_state.packages_processed)
+
+for summary in st.session_state.summary_lines:
+    st.info(summary)
+
+
 # --- The page ---------------------------------------------------------------------
 #
 # No scaffolding. You have written two of these now, and this one does the same

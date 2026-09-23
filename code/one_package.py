@@ -49,22 +49,3 @@ if package_data:
             st.info(f"{name} ➡️ {quantity}")
 
     st.success(f"Total 📦 Size: {total} {unit}")
-
-    
-
-# TODO: guard the work — an `if` on package_data, so that nothing below runs while
-#       the text box is empty. Everything that follows is indented inside it.
-
-    # 1. Parse.
-    #    TODO: call parse_packaging(package_data) and store the result in `package`.
-
-    # 2. Total.
-    #    TODO: call calc_total_units(package) and store it in `total`.
-    #    TODO: call get_unit(package) and store it in `unit`.
-
-    # 3. Show each level. `package` is a list of one-item dictionaries, so a loop over
-    #    it, and a loop over each item's .items(), gives you the name and quantity.
-    #    TODO: for each level, st.info(f"{name} ➡️ {quantity}")
-
-    # 4. Show the total.
-    #    TODO: st.success(f"Total 📦 Size: {total} {unit}")
