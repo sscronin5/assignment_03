@@ -40,12 +40,16 @@ package_data = st.text_input(
 # calls to you; the third gives you neither.
 
 if package_data:
-    package = parse_packaging(package_data)
-    total = calc_total_units(package)
-    unit = get_unit(package)
+    try:
+        package = parse_packaging(package_data)
+    except ValueError as error:
+        st.error(f"Could not read that description: {error}")
+    else:
+        total = calc_total_units(package)
+        unit = get_unit(package)
 
-    for level_dict in package:
-        for name, quantity in level_dict.items():
-            st.info(f"{name} ➡️ {quantity}")
+        for level in package:
+            for name, quantity in level.items():
+                st.info(f"{name} ➡️ {quantity}")
 
-    st.success(f"Total 📦 Size: {total} {unit}")
+        st.success(f"Total 📦 Size: {total} {unit}")
